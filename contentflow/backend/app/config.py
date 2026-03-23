@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_access_expire_minutes: int = 120
     jwt_refresh_expire_days: int = 7
 
+    ominilink_api_key: str = ""
     dashscope_api_key: str = ""
     anthropic_api_key: str = ""
     openai_api_key: str = ""

@@ -5,9 +5,21 @@ from app.config import settings
 
 async def generate_content(system_prompt: str, user_prompt: str) -> dict:
     """调用 AI 模型生成内容，返回解析后的 JSON dict。
-    优先使用 DashScope（通义千问），降级到 Anthropic。"""
-    if settings.dashscope_api_key:
-        raw_text = await _call_dashscope(system_prompt, user_prompt)
+    优先级：OminiLink(Gemini) → DashScope(Qwen) → Anthropic(Claude)"""
+    if settings.ominilink_api_key:
+        raw_text = await _call_openai_compatible(
+            settings.ominilink_api_key,
+            "https://api.ominilink.ai/v1/chat/completions",
+            "gemini-2.0-flash",
+            system_prompt, user_prompt,
+        )
+    elif settings.dashscope_api_key:
+        raw_text = await _call_openai_compatible(
+            settings.dashscope_api_key,
+            "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+            "qwen-plus",
+            system_prompt, user_prompt,
+        )
     elif settings.anthropic_api_key:
         raw_text = await _call_anthropic(system_prompt, user_prompt)
     else:
@@ -20,17 +32,20 @@ async def generate_content(system_prompt: str, user_prompt: str) -> dict:
     return json.loads(raw_text)
 
 
-async def _call_dashscope(system_prompt: str, user_prompt: str) -> str:
-    """通义千问 (DashScope OpenAI 兼容接口)"""
+async def _call_openai_compatible(
+    api_key: str, base_url: str, model: str,
+    system_prompt: str, user_prompt: str,
+) -> str:
+    """OpenAI 兼容接口（适用于 DashScope、OminiLink 等）"""
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
-            "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+            base_url,
             headers={
-                "Authorization": f"Bearer {settings.dashscope_api_key}",
+                "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": "qwen-plus",
+                "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
