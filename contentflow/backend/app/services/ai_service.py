@@ -10,7 +10,7 @@ async def generate_content(system_prompt: str, user_prompt: str) -> dict:
         raw_text = await _call_openai_compatible(
             settings.ominilink_api_key,
             "https://api.ominilink.ai/v1/chat/completions",
-            "gemini-2.5-flash",
+            "gemini-2.5-pro",
             system_prompt, user_prompt,
         )
     elif settings.dashscope_api_key:
