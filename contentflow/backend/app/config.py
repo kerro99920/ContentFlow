@@ -1,0 +1,22 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/contentflow"
+    test_database_url: str = "sqlite+aiosqlite:///./test.db"
+    redis_url: str = "redis://localhost:6379/0"
+
+    jwt_secret: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_expire_minutes: int = 120
+    jwt_refresh_expire_days: int = 7
+
+    anthropic_api_key: str = ""
+    openai_api_key: str = ""
+
+    free_monthly_quota: int = 10
+
+    model_config = {"env_file": ".env"}
+
+
+settings = Settings()
