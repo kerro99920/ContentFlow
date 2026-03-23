@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     openai_api_key: str = ""
 
+    frontend_url: str = ""
     free_monthly_quota: int = 10
 
     model_config = {"env_file": ".env"}
