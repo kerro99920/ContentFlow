@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/auth";
+import { UsageBadge } from "./usage-badge";
 
 const navItems = [
   { href: "/generate", label: "内容生成" },
@@ -23,6 +24,7 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
+      <UsageBadge />
       <Button variant="outline" onClick={logout}>退出登录</Button>
     </aside>
   );
