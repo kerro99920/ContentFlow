@@ -39,7 +39,7 @@ if [ -d "/opt/contentflow/backend/.git" ]; then
     cd /opt/contentflow/backend && git pull
 else
     # 从 GitHub clone（替换为你的仓库地址）
-    REPO_URL="${REPO_URL:-https://github.com/kerro99920/contentflow.git}"
+    REPO_URL="${REPO_URL:-https://github.com/kerro99920/ContentFlow.git}"
     BRANCH="${BRANCH:-feat/contentflow-phase1}"
     rm -rf /tmp/contentflow-clone
     git clone --depth 1 -b "$BRANCH" "$REPO_URL" /tmp/contentflow-clone 2>/dev/null
