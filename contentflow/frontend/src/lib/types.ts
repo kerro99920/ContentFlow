@@ -39,3 +39,45 @@ export interface UsageInfo {
   generation_count: number;
   quota: number;
 }
+
+export interface BatchGenerateResponse {
+  task_ids: Record<string, string>;
+}
+
+export interface BrandProfile {
+  id: string;
+  name: string;
+  tone_description: string;
+  system_prompt: string;
+  industry_keywords: string[] | null;
+  created_at: string;
+}
+
+export interface ScheduledTask {
+  id: string;
+  name: string;
+  cron_expression: string;
+  source_material: string;
+  platforms: string[];
+  brand_tone: string;
+  is_active: boolean;
+  last_run_at: string | null;
+  created_at: string;
+}
+
+export interface CalendarDay {
+  date: string;
+  items: ContentItem[];
+}
+
+export interface CalendarResponse {
+  month: string;
+  days: CalendarDay[];
+}
+
+export const PLATFORMS = [
+  { value: "xiaohongshu", label: "小红书" },
+  { value: "douyin", label: "抖音" },
+  { value: "wechat", label: "公众号" },
+  { value: "blog", label: "博客" },
+] as const;
