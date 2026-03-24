@@ -8,6 +8,9 @@ import { UsageBadge } from "./usage-badge";
 const navItems = [
   { href: "/generate", label: "内容生成" },
   { href: "/history", label: "历史记录" },
+  { href: "/brands", label: "品牌模板" },
+  { href: "/schedules", label: "自动任务" },
+  { href: "/calendar", label: "日历" },
 ];
 
 export function Sidebar() {
