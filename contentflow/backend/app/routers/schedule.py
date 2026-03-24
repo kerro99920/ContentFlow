@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.deps import get_current_user
+from app.deps import get_current_user, parse_uuid
 from app.models.user import User
 from app.models.schedule import ScheduledTask
 from app.schemas.schedule import ScheduleCreateRequest, ScheduleUpdateRequest, ScheduleResponse
@@ -31,7 +31,7 @@ async def create_schedule(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    brand_profile_id = uuid.UUID(req.brand_profile_id) if req.brand_profile_id else None
+    brand_profile_id = parse_uuid(req.brand_profile_id) if req.brand_profile_id else None
     task = ScheduledTask(
         user_id=user.id,
         name=req.name,
@@ -70,9 +70,9 @@ async def update_schedule(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    task = await db.get(ScheduledTask, uuid.UUID(schedule_id))
+    task = await db.get(ScheduledTask, parse_uuid(schedule_id))
     if not task or task.user_id != user.id:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "定时任务不存在"})
     if req.name is not None:
         task.name = req.name
     if req.cron_expression is not None:
@@ -106,9 +106,9 @@ async def delete_schedule(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    task = await db.get(ScheduledTask, uuid.UUID(schedule_id))
+    task = await db.get(ScheduledTask, parse_uuid(schedule_id))
     if not task or task.user_id != user.id:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "定时任务不存在"})
     try:
         from app.services.schedule_service import remove_job_from_scheduler
         await remove_job_from_scheduler(str(task.id))
@@ -125,9 +125,9 @@ async def manual_run(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    task = await db.get(ScheduledTask, uuid.UUID(schedule_id))
+    task = await db.get(ScheduledTask, parse_uuid(schedule_id))
     if not task or task.user_id != user.id:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "定时任务不存在"})
     from app.services.schedule_service import execute_scheduled_task
     bg.add_task(execute_scheduled_task, schedule_id)
     return {"status": "triggered"}

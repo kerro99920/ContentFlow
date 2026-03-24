@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.deps import get_current_user
+from app.deps import get_current_user, parse_uuid
 from app.models.user import User
 from app.models.content import Content, GenerationTask
 from app.schemas.content import (
@@ -49,9 +49,9 @@ async def get_task_status(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    task = await db.get(GenerationTask, uuid.UUID(task_id))
+    task = await db.get(GenerationTask, parse_uuid(task_id))
     if not task or task.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "任务不存在"})
     return TaskStatusResponse(
         task_id=str(task.id),
         status=task.status,
@@ -110,7 +110,7 @@ async def generate_batch(
     custom_system_prompt = None
     if req.brand_profile_id:
         from app.models.brand_profile import BrandProfile
-        bp = await db.get(BrandProfile, uuid.UUID(req.brand_profile_id))
+        bp = await db.get(BrandProfile, parse_uuid(req.brand_profile_id))
         if bp and bp.user_id == user.id:
             custom_system_prompt = bp.system_prompt
 
@@ -150,7 +150,7 @@ async def get_calendar(
         year, mon = month.split("-")
         year, mon = int(year), int(mon)
     except ValueError:
-        raise HTTPException(status_code=400, detail="month 格式应为 YYYY-MM")
+        raise HTTPException(status_code=400, detail={"code": "INVALID_PARAM", "message": "month 格式应为 YYYY-MM"})
 
     query = select(Content).where(
         Content.user_id == user.id,
@@ -185,9 +185,9 @@ async def update_content(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    content = await db.get(Content, uuid.UUID(content_id))
+    content = await db.get(Content, parse_uuid(content_id))
     if not content or content.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Content not found")
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "内容不存在"})
     if req.title is not None:
         content.title = req.title
     if req.body is not None:
@@ -211,9 +211,9 @@ async def get_content(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    content = await db.get(Content, uuid.UUID(content_id))
+    content = await db.get(Content, parse_uuid(content_id))
     if not content or content.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Content not found")
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "内容不存在"})
     return ContentResponse(
         id=str(content.id), platform=content.platform, title=content.title,
         body=content.body, tags=content.tags, metadata=content.metadata_,
@@ -227,8 +227,8 @@ async def delete_content(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    content = await db.get(Content, uuid.UUID(content_id))
+    content = await db.get(Content, parse_uuid(content_id))
     if not content or content.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Content not found")
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "内容不存在"})
     await db.delete(content)
     await db.commit()

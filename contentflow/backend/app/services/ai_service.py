@@ -1,11 +1,10 @@
 import json
+import re
 import httpx
 from app.config import settings
 
 
 async def generate_content(system_prompt: str, user_prompt: str) -> dict:
-    """调用 AI 模型生成内容，返回解析后的 JSON dict。
-    优先级：OminiLink(Gemini) → DashScope(Qwen) → Anthropic(Claude)"""
     if settings.ominilink_api_key:
         raw_text = await _call_openai_compatible(
             settings.ominilink_api_key,
@@ -25,18 +24,41 @@ async def generate_content(system_prompt: str, user_prompt: str) -> dict:
     else:
         raise RuntimeError("未配置任何 AI API Key")
 
-    # 去除可能的 markdown code fence
-    raw_text = raw_text.strip()
-    if raw_text.startswith("```"):
-        raw_text = raw_text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    return json.loads(raw_text)
+    return _parse_json_response(raw_text)
+
+
+def _parse_json_response(raw_text: str) -> dict:
+    """从 AI 响应中提取 JSON，处理 markdown fence 和混合文本"""
+    text = raw_text.strip()
+    # 去除 markdown code fence
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+
+    # 尝试直接解析
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # 尝试提取第一个 JSON 对象
+    match = re.search(r'\{[\s\S]*\}', text)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+
+    raise ValueError(f"AI 返回了无法解析的内容格式")
 
 
 async def _call_openai_compatible(
     api_key: str, base_url: str, model: str,
     system_prompt: str, user_prompt: str,
 ) -> str:
-    """OpenAI 兼容接口（适用于 DashScope、OminiLink 等）"""
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             base_url,
@@ -50,7 +72,7 @@ async def _call_openai_compatible(
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                "max_tokens": 2000,
+                "max_tokens": 4000,
                 "temperature": 0.7,
             },
         )
@@ -59,12 +81,11 @@ async def _call_openai_compatible(
 
 
 async def _call_anthropic(system_prompt: str, user_prompt: str) -> str:
-    """Claude API (备选)"""
     import anthropic
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
     message = await client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=2000,
+        max_tokens=4000,
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     )

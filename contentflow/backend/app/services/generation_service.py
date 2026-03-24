@@ -73,5 +73,9 @@ async def _do_generation(
 
     except Exception as e:
         task.status = "failed"
-        task.error_message = str(e)
+        # 截断错误信息，避免泄露敏感信息
+        error_msg = str(e)
+        if len(error_msg) > 200:
+            error_msg = error_msg[:200] + "..."
+        task.error_message = error_msg
         await db.commit()

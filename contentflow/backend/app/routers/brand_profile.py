@@ -1,9 +1,8 @@
-import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.deps import get_current_user
+from app.deps import get_current_user, parse_uuid
 from app.models.user import User
 from app.models.brand_profile import BrandProfile
 from app.schemas.brand_profile import BrandProfileCreateRequest, BrandProfileResponse
@@ -27,8 +26,8 @@ async def list_brand_profiles(db: AsyncSession = Depends(get_db), user: User = D
 
 @router.delete("/{profile_id}", status_code=204)
 async def delete_brand_profile(profile_id: str, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
-    bp = await db.get(BrandProfile, uuid.UUID(profile_id))
+    bp = await db.get(BrandProfile, parse_uuid(profile_id))
     if not bp or bp.user_id != user.id:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "品牌档案不存在"})
     await db.delete(bp)
     await db.commit()
