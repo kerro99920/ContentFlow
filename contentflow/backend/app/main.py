@@ -23,7 +23,8 @@ async def health():
     return {"status": "ok"}
 
 
-from app.routers import auth, user, content
+from app.routers import auth, user, content, brand_profile
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(content.router)
+app.include_router(brand_profile.router)
