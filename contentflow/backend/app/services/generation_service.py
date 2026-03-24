@@ -3,15 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.content import Content, GenerationTask
 from app.services.ai_service import generate_content
 from app.services.usage_service import increment_usage
-from app.prompts.xiaohongshu import build_system_prompt, build_user_prompt
+from app.prompts.registry import get_prompt_builders, get_validator
 
-VALIDATORS = {
-    "xiaohongshu": lambda d: (
-        len(d.get("title", "")) <= 20
-        and len(d.get("body", "")) <= 1000
-        and isinstance(d.get("tags"), list)
-    ),
-}
 
 async def run_generation(
     task_id: uuid.UUID,
@@ -19,10 +12,12 @@ async def run_generation(
     source_material: str,
     platform: str,
     brand_tone: str,
+    custom_system_prompt: str | None = None,
 ) -> None:
     from app.database import async_session
     async with async_session() as db:
-        await _do_generation(db, task_id, user_id, source_material, platform, brand_tone)
+        await _do_generation(db, task_id, user_id, source_material, platform, brand_tone, custom_system_prompt)
+
 
 async def _do_generation(
     db: AsyncSession,
@@ -31,19 +26,24 @@ async def _do_generation(
     source_material: str,
     platform: str,
     brand_tone: str,
+    custom_system_prompt: str | None = None,
 ) -> None:
     task = await db.get(GenerationTask, task_id)
     task.status = "running"
     await db.commit()
 
     try:
-        system_prompt = build_system_prompt(brand_tone)
-        user_prompt = build_user_prompt(source_material)
+        build_system, build_user = get_prompt_builders(platform)
+        if custom_system_prompt:
+            system_prompt = custom_system_prompt
+        else:
+            system_prompt = build_system(brand_tone)
+        user_prompt = build_user(source_material)
+        validator = get_validator(platform)
 
         result = None
         for attempt in range(3):
             result = await generate_content(system_prompt, user_prompt)
-            validator = VALIDATORS.get(platform, lambda _: True)
             if validator(result):
                 break
         else:
@@ -57,9 +57,9 @@ async def _do_generation(
             source_material=source_material,
             platform=platform,
             title=result.get("title"),
-            body=result.get("body"),
-            tags=result.get("tags"),
-            metadata_={"cover_text": result.get("cover_text")},
+            body=result.get("body") or result.get("subtitle_text"),
+            tags=result.get("tags") or result.get("keywords"),
+            metadata_=result,
             brand_tone=brand_tone,
             status="draft",
         )
