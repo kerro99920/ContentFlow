@@ -65,9 +65,10 @@ async def health(db: AsyncSession = Depends(get_db)):
         return JSONResponse(status_code=503, content={"status": "error", "database": "disconnected"})
 
 
-from app.routers import auth, user, content, brand_profile, schedule
+from app.routers import auth, user, content, brand_profile, schedule, publish
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(content.router)
 app.include_router(brand_profile.router)
 app.include_router(schedule.router)
+app.include_router(publish.router)
