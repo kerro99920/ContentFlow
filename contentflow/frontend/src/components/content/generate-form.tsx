@@ -25,7 +25,7 @@ interface TrendItem {
 }
 
 const SOURCE_LABELS: Record<string, string> = {
-  weibo: "微博", baidu: "百度", douyin: "抖音",
+  toutiao: "头条", baidu: "百度", zhihu: "知乎",
 };
 
 export function GenerateForm({ onGenerated }: Props) {

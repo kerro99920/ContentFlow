@@ -1,31 +1,32 @@
-"""获取各平台热点话题"""
+"""获取各平台热点话题（使用公开聚合 API）"""
 import httpx
 
 
 async def get_trending_topics() -> list[dict]:
-    """从公开 API 获取热搜，返回 [{title, source, hot_score, url}]"""
+    """从多个来源获取热搜，返回 [{title, source, hot_score, url}]"""
     topics = []
-    topics.extend(await _fetch_weibo())
-    topics.extend(await _fetch_baidu())
-    topics.extend(await _fetch_douyin())
+    for fetcher in [_fetch_toutiao, _fetch_baidu, _fetch_zhihu]:
+        topics.extend(await fetcher())
     return topics[:30]
 
 
-async def _fetch_weibo() -> list[dict]:
-    """微博热搜"""
+async def _fetch_toutiao() -> list[dict]:
+    """今日头条热榜"""
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get("https://weibo.com/ajax/side/hotSearch")
-            data = resp.json().get("data", {}).get("realtime", [])
+            resp = await client.get(
+                "https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc"
+            )
+            data = resp.json().get("data", [])
             return [
                 {
-                    "title": item.get("word", ""),
-                    "source": "weibo",
-                    "hot_score": item.get("num", 0),
-                    "url": f"https://s.weibo.com/weibo?q=%23{item.get('word', '')}%23",
+                    "title": item.get("Title", ""),
+                    "source": "toutiao",
+                    "hot_score": item.get("HotValue", 0),
+                    "url": item.get("Url", ""),
                 }
                 for item in data[:10]
-                if item.get("word")
+                if item.get("Title")
             ]
     except Exception:
         return []
@@ -34,7 +35,7 @@ async def _fetch_weibo() -> list[dict]:
 async def _fetch_baidu() -> list[dict]:
     """百度热搜"""
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
             resp = await client.get(
                 "https://top.baidu.com/api/board?platform=wise&tab=realtime"
             )
@@ -54,24 +55,24 @@ async def _fetch_baidu() -> list[dict]:
         return []
 
 
-async def _fetch_douyin() -> list[dict]:
-    """抖音热榜（通过公开接口）"""
+async def _fetch_zhihu() -> list[dict]:
+    """知乎热榜"""
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
-                "https://www.douyin.com/aweme/v1/web/hot/search/list/",
+                "https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=10",
                 headers={"User-Agent": "Mozilla/5.0"},
             )
-            data = resp.json().get("data", {}).get("word_list", [])
+            data = resp.json().get("data", [])
             return [
                 {
-                    "title": item.get("word", ""),
-                    "source": "douyin",
-                    "hot_score": item.get("hot_value", 0),
-                    "url": "",
+                    "title": item.get("target", {}).get("title", ""),
+                    "source": "zhihu",
+                    "hot_score": item.get("detail_text", "0"),
+                    "url": item.get("target", {}).get("url", ""),
                 }
                 for item in data[:10]
-                if item.get("word")
+                if item.get("target", {}).get("title")
             ]
     except Exception:
         return []
