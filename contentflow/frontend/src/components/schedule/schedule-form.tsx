@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { PLATFORMS } from "@/lib/types";
 import type { ScheduledTask } from "@/lib/types";
+import { toast } from "sonner";
 
 const CRON_PRESETS = [
   { label: "每天 9:00", value: "0 9 * * *" },
@@ -62,6 +63,7 @@ export function ScheduleForm({ onCreated }: Props) {
       setSelectedPlatforms([]);
       setBrandTone("casual");
       setCronExpression("0 9 * * *");
+      toast.success("定时任务已创建");
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "创建失败");

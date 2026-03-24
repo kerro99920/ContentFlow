@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import type { BrandProfile } from "@/lib/types";
+import { toast } from "sonner";
 
 interface Props {
   onCreated: () => void;
@@ -38,6 +39,7 @@ export function BrandForm({ onCreated }: Props) {
       setName("");
       setToneDescription("");
       setKeywords("");
+      toast.success("品牌模板已创建");
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "创建失败");

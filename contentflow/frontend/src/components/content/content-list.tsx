@@ -4,8 +4,15 @@ import { api } from "@/lib/api";
 import { ContentCard } from "./content-card";
 import { Button } from "@/components/ui/button";
 import type { ContentItem, ContentListResponse } from "@/lib/types";
+import Link from "next/link";
 
-export function ContentList() {
+interface Props {
+  platform?: string;
+  status?: string;
+  search?: string;
+}
+
+export function ContentList({ platform, status, search }: Props) {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -14,7 +21,10 @@ export function ContentList() {
   const fetchPage = async (p: number) => {
     setLoading(true);
     try {
-      const data = await api.fetch<ContentListResponse>(`/api/content?page=${p}&page_size=10`);
+      const params = new URLSearchParams({ page: String(p), page_size: "10" });
+      if (platform) params.set("platform", platform);
+      if (status) params.set("status", status);
+      const data = await api.fetch<ContentListResponse>(`/api/content?${params.toString()}`);
       setItems(data.items);
       setTotal(data.total);
       setPage(p);
@@ -23,16 +33,26 @@ export function ContentList() {
     }
   };
 
-  useEffect(() => { fetchPage(1); }, []);
+  useEffect(() => { fetchPage(1); }, [platform, status]);
+
+  const filtered = search
+    ? items.filter((item) => (item.title || "").toLowerCase().includes(search.toLowerCase()))
+    : items;
 
   const totalPages = Math.ceil(total / 10);
 
   if (loading) return <p className="text-muted-foreground">加载中...</p>;
-  if (items.length === 0) return <p className="text-muted-foreground">暂无内容，去生成第一篇吧</p>;
+  if (filtered.length === 0) return (
+    <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <div className="text-4xl">📝</div>
+      <p className="text-muted-foreground">暂无内容</p>
+      <Link href="/generate"><Button>去生成第一篇内容</Button></Link>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
-      {items.map((item) => (
+      {filtered.map((item) => (
         <ContentCard key={item.id} content={item} />
       ))}
       {totalPages > 1 && (

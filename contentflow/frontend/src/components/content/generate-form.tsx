@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import type { GenerateResponse, TaskStatus, ContentItem, BatchGenerateResponse, BrandProfile } from "@/lib/types";
 import { PLATFORMS } from "@/lib/types";
+import { toast } from "sonner";
 
 const tones = [
   { value: "professional", label: "专业严谨" },
@@ -71,9 +72,15 @@ export function GenerateForm({ onGenerated }: Props) {
 
   const pollTask = async (taskId: string): Promise<ContentItem | null> => {
     let status: TaskStatus;
+    let attempts = 0;
+    const maxAttempts = 40;
     do {
       await new Promise((r) => setTimeout(r, 1500));
       status = await api.fetch<TaskStatus>(`/api/content/tasks/${taskId}`);
+      attempts++;
+      if (attempts >= maxAttempts) {
+        return null;
+      }
     } while (status.status === "pending" || status.status === "running");
 
     if (status.status === "completed" && status.content_id) {
@@ -105,8 +112,11 @@ export function GenerateForm({ onGenerated }: Props) {
         if (content) {
           onGenerated([content]);
           setMaterial("");
+          toast.success("内容生成完成");
         } else {
-          setError("生成失败，请重试");
+          const msg = "生成失败，请重试";
+          setError(msg);
+          toast.error(msg);
         }
       } else {
         const { task_ids } = await api.fetch<BatchGenerateResponse>("/api/content/generate-batch", {
@@ -125,12 +135,17 @@ export function GenerateForm({ onGenerated }: Props) {
         if (contents.length > 0) {
           onGenerated(contents);
           setMaterial("");
+          toast.success("内容生成完成");
         } else {
-          setError("生成失败，请重试");
+          const msg = "生成失败，请重试";
+          setError(msg);
+          toast.error(msg);
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "请求失败");
+      const msg = err instanceof Error ? err.message : "请求失败";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

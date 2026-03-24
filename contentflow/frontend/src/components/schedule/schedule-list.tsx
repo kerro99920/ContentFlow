@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import type { ScheduledTask } from "@/lib/types";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const PLATFORM_LABELS: Record<string, string> = {
   xiaohongshu: "小红书", douyin: "抖音", wechat: "公众号", blog: "博客",
@@ -38,6 +40,7 @@ export function ScheduleList() {
     setActionId(id);
     try {
       await api.fetch(`/api/schedules/${id}/run`, { method: "POST" });
+      toast.success("任务已触发");
     } finally {
       setActionId(null);
     }
@@ -48,13 +51,20 @@ export function ScheduleList() {
     try {
       await api.fetch(`/api/schedules/${id}`, { method: "DELETE" });
       setTasks((prev) => prev.filter((t) => t.id !== id));
+      toast.success("任务已删除");
     } finally {
       setActionId(null);
     }
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">加载中...</p>;
-  if (tasks.length === 0) return <p className="text-sm text-muted-foreground">暂无自动任务</p>;
+  if (tasks.length === 0) return (
+    <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <div className="text-4xl">⏰</div>
+      <p className="text-muted-foreground">暂无自动任务</p>
+      <Link href="/schedules"><Button>创建自动任务</Button></Link>
+    </div>
+  );
 
   return (
     <div className="space-y-4">

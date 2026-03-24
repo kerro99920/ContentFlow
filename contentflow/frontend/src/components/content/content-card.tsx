@@ -7,6 +7,7 @@ import { CopyButton } from "./copy-button";
 import { EditModal } from "./edit-modal";
 import { api } from "@/lib/api";
 import type { ContentItem } from "@/lib/types";
+import { toast } from "sonner";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "草稿",
@@ -82,7 +83,7 @@ export function ContentCard({ content: initialContent }: { content: ContentItem 
         {editing && (
           <EditModal
             content={content}
-            onSaved={(updated) => { setContent(updated); setEditing(false); }}
+            onSaved={(updated) => { setContent(updated); setEditing(false); toast.success("内容已更新"); }}
             onCancel={() => setEditing(false)}
           />
         )}

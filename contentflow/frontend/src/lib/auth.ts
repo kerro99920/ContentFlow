@@ -12,6 +12,7 @@ export async function register(email: string, password: string): Promise<void> {
   });
   localStorage.setItem("access_token", data.access_token);
   localStorage.setItem("refresh_token", data.refresh_token);
+  document.cookie = "access_token=1; path=/; max-age=604800";
 }
 
 export async function login(email: string, password: string): Promise<void> {
@@ -21,11 +22,13 @@ export async function login(email: string, password: string): Promise<void> {
   });
   localStorage.setItem("access_token", data.access_token);
   localStorage.setItem("refresh_token", data.refresh_token);
+  document.cookie = "access_token=1; path=/; max-age=604800";
 }
 
 export function logout(): void {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
+  document.cookie = "access_token=; path=/; max-age=0";
   window.location.href = "/login";
 }
 
