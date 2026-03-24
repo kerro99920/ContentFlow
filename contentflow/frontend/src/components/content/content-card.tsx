@@ -15,6 +15,12 @@ const STATUS_LABELS: Record<string, string> = {
   published: "已发布",
 };
 
+const PUBLISH_PLATFORMS: Record<string, string> = {
+  twitter: "Twitter/X",
+  xiaohongshu: "小红书",
+  bilibili: "B站",
+};
+
 const STATUS_VARIANTS: Record<string, "secondary" | "default" | "outline"> = {
   draft: "secondary",
   approved: "default",
@@ -25,6 +31,27 @@ export function ContentCard({ content: initialContent }: { content: ContentItem 
   const [content, setContent] = useState(initialContent);
   const [editing, setEditing] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  const handlePublish = async (platform: string) => {
+    setPublishing(true);
+    try {
+      const result = await api.fetch<{ success: boolean; message: string }>("/api/publish", {
+        method: "POST",
+        body: JSON.stringify({ content_id: content.id, platform }),
+      });
+      if (result.success) {
+        toast.success(result.message);
+        setContent({ ...content, status: "published" });
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "发布失败");
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const changeStatus = async (status: string) => {
     setStatusLoading(true);
@@ -77,6 +104,15 @@ export function ContentCard({ content: initialContent }: { content: ContentItem 
           {content.status === "approved" && (
             <Button variant="outline" size="sm" disabled={statusLoading} onClick={() => changeStatus("published")}>
               标记已发布
+            </Button>
+          )}
+          {content.platform in PUBLISH_PLATFORMS && content.status !== "published" && (
+            <Button
+              size="sm"
+              disabled={publishing}
+              onClick={() => handlePublish(content.platform)}
+            >
+              {publishing ? "发布中..." : `发布到${PUBLISH_PLATFORMS[content.platform] || content.platform}`}
             </Button>
           )}
         </div>
