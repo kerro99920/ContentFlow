@@ -22,6 +22,8 @@ export default function HistoryPage() {
             <SelectItem value="douyin">抖音</SelectItem>
             <SelectItem value="wechat">公众号</SelectItem>
             <SelectItem value="blog">博客</SelectItem>
+            <SelectItem value="twitter">Twitter/X</SelectItem>
+            <SelectItem value="bilibili">B站</SelectItem>
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={(v) => { if (v) setStatus(v); }}>

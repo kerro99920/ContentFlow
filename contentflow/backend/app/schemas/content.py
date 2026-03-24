@@ -1,7 +1,7 @@
 from typing import Literal
 from pydantic import BaseModel, Field
 
-PLATFORM_TYPE = Literal["xiaohongshu", "douyin", "wechat", "blog"]
+PLATFORM_TYPE = Literal["xiaohongshu", "douyin", "wechat", "blog", "twitter", "bilibili"]
 TONE_TYPE = Literal["professional", "casual", "seeding"]
 
 

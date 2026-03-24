@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 const PLATFORM_LABELS: Record<string, string> = {
-  xiaohongshu: "小红书", douyin: "抖音", wechat: "公众号", blog: "博客",
+  xiaohongshu: "小红书", douyin: "抖音", wechat: "公众号", blog: "博客", twitter: "Twitter/X", bilibili: "B站",
 };
 
 export function ScheduleList() {

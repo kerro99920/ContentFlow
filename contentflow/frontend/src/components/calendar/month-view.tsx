@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import type { CalendarResponse, CalendarDay } from "@/lib/types";
 
 const PLATFORM_LABELS: Record<string, string> = {
-  xiaohongshu: "红书", douyin: "抖音", wechat: "公众号", blog: "博客",
+  xiaohongshu: "小红书", douyin: "抖音", wechat: "公众号", blog: "博客", twitter: "Twitter/X", bilibili: "B站",
 };
 
 const WEEK_DAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];

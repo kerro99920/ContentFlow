@@ -2,7 +2,7 @@ import pytest
 from app.prompts.registry import get_prompt_builders, get_validator, PLATFORM_PROMPTS
 
 def test_all_platforms_registered():
-    assert set(PLATFORM_PROMPTS.keys()) == {"xiaohongshu", "douyin", "wechat", "blog"}
+    assert set(PLATFORM_PROMPTS.keys()) == {"xiaohongshu", "douyin", "wechat", "blog", "twitter", "bilibili"}
 
 @pytest.mark.parametrize("platform", ["xiaohongshu", "douyin", "wechat", "blog"])
 def test_prompt_builders_return_strings(platform):

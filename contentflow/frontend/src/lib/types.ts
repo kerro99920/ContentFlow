@@ -80,4 +80,6 @@ export const PLATFORMS = [
   { value: "douyin", label: "抖音" },
   { value: "wechat", label: "公众号" },
   { value: "blog", label: "博客" },
+  { value: "twitter", label: "Twitter/X" },
+  { value: "bilibili", label: "B站" },
 ] as const;
