@@ -1,7 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="ContentFlow API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app):
+    try:
+        from app.services.schedule_service import init_scheduler
+        await init_scheduler()
+    except Exception:
+        pass
+    yield
+
+
+app = FastAPI(title="ContentFlow API", version="0.2.0", lifespan=lifespan)
 
 from app.config import settings
 
@@ -23,8 +35,9 @@ async def health():
     return {"status": "ok"}
 
 
-from app.routers import auth, user, content, brand_profile
+from app.routers import auth, user, content, brand_profile, schedule
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(content.router)
 app.include_router(brand_profile.router)
+app.include_router(schedule.router)
