@@ -30,3 +30,18 @@ class ContentListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+class BatchGenerateRequest(BaseModel):
+    source_material: str
+    platforms: list[str]
+    brand_tone: str = "casual"
+    brand_profile_id: str | None = None
+
+class BatchGenerateResponse(BaseModel):
+    task_ids: dict[str, str]
+
+class ContentUpdateRequest(BaseModel):
+    title: str | None = None
+    body: str | None = None
+    tags: list[str] | None = None
+    status: str | None = None
