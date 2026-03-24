@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,13 @@ export function AuthForm({ mode }: AuthFormProps) {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "处理中..." : mode === "login" ? "登录" : "注册"}
           </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            {mode === "login" ? (
+              <>还没有账号？<Link href="/register" className="underline">注册</Link></>
+            ) : (
+              <>已有账号？<Link href="/login" className="underline">登录</Link></>
+            )}
+          </p>
         </form>
       </CardContent>
     </Card>

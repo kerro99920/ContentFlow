@@ -131,6 +131,12 @@ async def generate_batch(
     await db.commit()
     return BatchGenerateResponse(task_ids=task_ids)
 
+@router.get("/trends")
+async def get_trends(user: User = Depends(get_current_user)):
+    """获取各平台热点话题"""
+    from app.services.trends_service import get_trending_topics
+    return await get_trending_topics()
+
 @router.get("/calendar")
 async def get_calendar(
     month: str = Query(..., description="格式 YYYY-MM"),

@@ -18,6 +18,16 @@ interface Props {
   onGenerated: (contents: ContentItem[]) => void;
 }
 
+interface TrendItem {
+  title: string;
+  source: string;
+  hot_score: number;
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+  weibo: "微博", baidu: "百度", douyin: "抖音",
+};
+
 export function GenerateForm({ onGenerated }: Props) {
   const [material, setMaterial] = useState("");
   const [tone, setTone] = useState("casual");
@@ -26,12 +36,32 @@ export function GenerateForm({ onGenerated }: Props) {
   const [brandProfileId, setBrandProfileId] = useState<string>("__custom__");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [trends, setTrends] = useState<TrendItem[]>([]);
+  const [trendsLoading, setTrendsLoading] = useState(false);
+  const [showTrends, setShowTrends] = useState(false);
 
   useEffect(() => {
     api.fetch<BrandProfile[]>("/api/brand-profiles")
       .then((profiles) => setBrandProfiles(profiles))
       .catch(() => {});
   }, []);
+
+  const loadTrends = async () => {
+    if (trends.length > 0) {
+      setShowTrends(!showTrends);
+      return;
+    }
+    setTrendsLoading(true);
+    try {
+      const data = await api.fetch<TrendItem[]>("/api/content/trends");
+      setTrends(data);
+      setShowTrends(true);
+    } catch {
+      setError("获取热点失败");
+    } finally {
+      setTrendsLoading(false);
+    }
+  };
 
   const togglePlatform = (value: string) => {
     setSelectedPlatforms((prev) =>
@@ -109,11 +139,33 @@ export function GenerateForm({ onGenerated }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <Label>素材内容</Label>
+        <div className="mb-2 flex items-center justify-between">
+          <Label>素材内容</Label>
+          <Button variant="outline" size="sm" onClick={loadTrends} disabled={trendsLoading}>
+            {trendsLoading ? "加载中..." : showTrends ? "收起热点" : "选择热点话题"}
+          </Button>
+        </div>
+        {showTrends && trends.length > 0 && (
+          <div className="mb-3 max-h-60 overflow-y-auto rounded-lg border p-3">
+            <div className="space-y-1">
+              {trends.map((t, i) => (
+                <button
+                  key={i}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => { setMaterial(t.title); setShowTrends(false); }}
+                >
+                  <span className="inline-block w-6 text-center text-xs font-bold text-muted-foreground">{i + 1}</span>
+                  <span className="flex-1">{t.title}</span>
+                  <span className="text-xs text-muted-foreground">{SOURCE_LABELS[t.source] || t.source}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <Textarea
           value={material}
           onChange={(e) => setMaterial(e.target.value)}
-          placeholder="输入你的素材：产品描述、灵感、主题..."
+          placeholder="输入你的素材，或点击上方选择热点话题..."
           rows={6}
         />
       </div>
