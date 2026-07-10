@@ -17,7 +17,7 @@ dependencies = [
     "python-multipart>=0.0.27",
     "email-validator>=2.2",
     "apscheduler>=3.11.2",
-    "aiosmtplib>=5.1.0",
+    "aiosmtplib>=5.1.1",
     "playwright>=1.58.0",
 ]
 
